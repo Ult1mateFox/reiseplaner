@@ -35,7 +35,6 @@ const packingListByFerienArt: Record<Exclude<FerienArt, "">, string[]> = {
     "After-Sun-Lotion",
     "Strandtasche",
   ],
-
   Stadt: [
     "Bequeme Schuhe",
     "Kamera",
@@ -46,7 +45,6 @@ const packingListByFerienArt: Record<Exclude<FerienArt, "">, string[]> = {
     "Kleingeld / Karte",
     "Sonnenbrille",
   ],
-
   Abenteuer: [
     "Rucksack",
     "Wasserflasche",
@@ -64,6 +62,9 @@ function FormReise({ onBack }: FormReiseProps) {
   const [submittedData, setSubmittedData] = useState<ReiseFormData | null>(
     null,
   );
+  const [newPackingItem, setNewPackingItem] = useState("");
+  const [customPackingItems, setCustomPackingItems] = useState<string[]>([]);
+  const [checkedPackingItems, setCheckedPackingItems] = useState<number[]>([]);
 
   const handleInputChange = (
     event: ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -76,6 +77,9 @@ function FormReise({ onBack }: FormReiseProps) {
     }));
 
     setSubmittedData(null);
+    setNewPackingItem("");
+    setCustomPackingItems([]);
+    setCheckedPackingItems([]);
   };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -89,10 +93,37 @@ function FormReise({ onBack }: FormReiseProps) {
     }
 
     setSubmittedData(formData);
+    setNewPackingItem("");
+    setCustomPackingItems([]);
+    setCheckedPackingItems([]);
+  };
+
+  const handlePackingItemSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const trimmedItem = newPackingItem.trim();
+
+    if (!trimmedItem) {
+      return;
+    }
+
+    setCustomPackingItems((current) => [...current, trimmedItem]);
+    setNewPackingItem("");
+  };
+
+  const handlePackingItemToggle = (index: number) => {
+    setCheckedPackingItems((current) =>
+      current.includes(index)
+        ? current.filter((itemIndex) => itemIndex !== index)
+        : [...current, index],
+    );
   };
 
   const packingList = submittedData?.ferienArt
-    ? packingListByFerienArt[submittedData.ferienArt]
+    ? [
+        ...packingListByFerienArt[submittedData.ferienArt],
+        ...customPackingItems,
+      ]
     : [];
 
   return (
@@ -190,11 +221,48 @@ function FormReise({ onBack }: FormReiseProps) {
             <p>{submittedData.reiseziel}</p>
 
             <h3>Packliste</h3>
-            <ul>
-              {packingList.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
+            <ul className="packing-list">
+              {packingList.map((item, index) => {
+                const isChecked = checkedPackingItems.includes(index);
+
+                return (
+                  <li
+                    key={`${item}-${index}`}
+                    className={`packing-list-item${isChecked ? " is-checked" : ""}`}
+                  >
+                    <label className="packing-checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => handlePackingItemToggle(index)}
+                      />
+                      <span>{item}</span>
+                    </label>
+                  </li>
+                );
+              })}
             </ul>
+
+            <form className="packing-editor" onSubmit={handlePackingItemSubmit}>
+              <label htmlFor="packingItem">Neues Packlisten-Item</label>
+              <div className="packing-input-row">
+                <input
+                  id="packingItem"
+                  name="packingItem"
+                  type="text"
+                  value={newPackingItem}
+                  onChange={(event) => setNewPackingItem(event.target.value)}
+                  placeholder="z. B. Reisepass"
+                />
+                <button
+                  type="submit"
+                  className="button-primary packing-add-button"
+                  disabled={!newPackingItem.trim()}
+                >
+                  Hinzufügen
+                </button>
+              </div>
+            </form>
           </section>
         )}
       </section>
