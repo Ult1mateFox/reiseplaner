@@ -167,7 +167,9 @@ function FormReise({ onBack }: FormReiseProps) {
               onChange={handleInputChange}
               required
             >
-              <option value="">Bitte auswählen</option>
+              <option value="" disabled hidden>
+                Bitte auswählen
+              </option>
               <option value="Strand">Strand</option>
               <option value="Stadt">Stadt</option>
               <option value="Abenteuer">Abenteuer</option>
